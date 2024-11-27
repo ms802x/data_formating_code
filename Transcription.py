@@ -16,16 +16,13 @@ def download_youtube_video(video_id):
             print(f"No Arabic transcription (manual or auto-generated) available for video ID: {video_id}")
             return  # Skip video download if no transcription is found
 
-    # Save transcription to file
+    # Save transcription to file, ignoring the last entry
     with open(transcription_path, "w", encoding="utf-8") as f:
-        for i, entry in enumerate(transcript):
+        for i in range(len(transcript) - 1):  # Exclude the last entry
+            entry = transcript[i]
             start_time = entry['start']
-            
             # Recalculate duration based on the next subtitle's start time
-            if i < len(transcript) - 1:
-                duration = transcript[i + 1]['start'] - start_time
-            else:
-                duration = 2.0  # Default duration for the last entry
+            duration = transcript[i + 1]['start'] - start_time
             
             # Write transcription details to the file
             text = entry['text']
