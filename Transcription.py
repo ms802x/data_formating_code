@@ -1,6 +1,17 @@
+import os
+from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api.formatters import SRTFormatter, TextFormatter
+from yt_dlp import YoutubeDL
+
 def download_youtube_video(video_id):
     video_url = f"https://www.youtube.com/watch?v={video_id}"
-    transcription_path = f"transcription/{video_id}.txt"
+    transcription_path = f"transcriptions/{video_id}.txt"
+    video_folder = "videos"
+    transcription_folder = "transcriptions"
+    
+    # Ensure the required folders exist
+    os.makedirs(video_folder, exist_ok=True)
+    os.makedirs(transcription_folder, exist_ok=True)
 
     transcript = None
     try:
@@ -31,21 +42,17 @@ def download_youtube_video(video_id):
 
     # Download video in medium quality
     ydl_opts = {
-        'format': 'bestvideo[height<=720]+bestaudio/best[height<=720]',
-        'outtmpl': f'videos/{video_id}.%(ext)s',
+        'format': 'best[height<=480]',  # Downloads best quality video and audio in 480p or lower
+        'outtmpl': f'{video_folder}/{video_id}.%(ext)s',  # Save video in 'videos' folder
         'quiet': True,
     }
+
     with YoutubeDL(ydl_opts) as ydl:
         ydl.download([video_url])
-    print(f"Video downloaded to 'videos/{video_id}.mp4'")
+    print(f"Video downloaded to '{video_folder}/{video_id}.mp4'")
 
 if __name__ == "__main__":
-    # List of video IDs to process
-    video_ids = [
-        "4kTR_qGqOJc",  # Example video ID (replace with your own)
-        
-    ]
-
+    # Assuming extract_video_ids is defined somewhere
+    video_ids = extract_video_ids(file_path)
     for vid in video_ids:
         download_youtube_video(vid)
-
