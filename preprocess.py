@@ -4,7 +4,8 @@ import math
 import os
 import shutil
 import warnings
-
+import subprocess
+from tqdm import tqdm  
 import ffmpeg
 from data.data_module import AVSRDataLoader
 from tqdm import tqdm
@@ -89,31 +90,44 @@ if args.subset == "test":
     filenames = glob.glob(os.path.join(args.data_dir, args.subset, "**", "*.mp4"), recursive=True)
 elif args.subset == "train":
     filenames = glob.glob(os.path.join(args.data_dir, "trainval", "**", "*.mp4"), recursive=True)
-    #filenames.extend(glob.glob(os.path.join(args.data_dir, "pretrain", "**", "*.mp4"), recursive=True))
     filenames.sort()
 else:
     raise NotImplementedError
 
-#unit = math.ceil(len(filenames) * 1.0 / args.groups)
-#filenames = filenames[args.job_index * unit : (args.job_index + 1) * unit]
+
+
 
 for data_filename in tqdm(filenames):
     try:
         video_data = vid_dataloader.load_data(data_filename)
-        audio_data = aud_dataloader.load_data(data_filename.replace(".mp4",".wav"))
+        audio_filename = data_filename.replace(".mp4",".wav")
+        if os.path.exists(audio_filename):
+            pass
+        else:
+                        # ffmpeg command to extract audio with 16kHz sample rate
+            command = [
+                "ffmpeg",
+                "-i", data_filename,         # Input file
+                "-vn",              # No video
+                "-acodec", "pcm_s16le",  # WAV format
+                "-ar", "16000",     # Audio sample rate (16kHz)
+                "-ac", "2",         # Audio channels (stereo)
+                audio_filename          # Output file
+            ]
+            subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+            
+        audio_data = aud_dataloader.load_data(audio_filename)
     except UnboundLocalError:
         continue
-    if os.path.normpath(data_filename).split(os.sep)[-2] in ["trainval", "test"]:
+    if os.path.normpath(data_filename).split(os.sep)[-4] in ["trainval", "test"]:
         dst_vid_filename = f"{data_filename.replace(args.data_dir, dst_vid_dir)[:-4]}.mp4"
         dst_aud_filename = f"{data_filename.replace(args.data_dir, dst_vid_dir)[:-4]}.wav"
         dst_txt_filename = f"{data_filename.replace(args.data_dir, dst_txt_dir)[:-4]}.txt"
         trim_vid_data, trim_aud_data = video_data, audio_data
-        text_line_list = open(data_filename[:-4] + ".txt", "r").read().splitlines()[0].split(" ")
-        print(text_line_list)
-        text_line = " ".join(text_line_list[2:])
-        content = text_line.replace("}", "").replace("{", "")
-        print(text_line)
-        #print(content)
+        text_line_list = open(data_filename[:-4].replace("clips","labels") + ".txt", "r").read().splitlines()[0].split(" ")
+        text_line = " ".join(text_line_list)
+        content = text_line
+        print(content)
         if trim_vid_data is None or trim_aud_data is None:
             continue
         video_length = len(trim_vid_data)
