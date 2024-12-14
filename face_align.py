@@ -4,20 +4,18 @@ import math
 import matplotlib.pyplot as plt
 
 
-def align_face(frames,faces):
+def align_face(frame,faces):
     """
     Align face by rotating the frame so that the eyes are horizontal.
-
     :param frame: The input image (frame) as a NumPy array.
     :param left_eye: The coordinates of the left eye as [x, y].
     :param right_eye: The coordinates of the right eye as [x, y].
     :return: The rotated (aligned) frame.
     """
-    right_mouth = faces[0][0][1][3]
-    left_mouth = faces[0][0][1][4]
-    x1,x2,y1,y2 = map(int,faces[0][0][0])
-    frame = frames[0]
-
+    right_mouth = faces[0][1][3]
+    left_mouth = faces[0][1][4]
+    x1,x2,y1,y2 = map(int,faces[0][0])
+  
     # Calculate the angle between the eyes
     dx = right_eye[0] - left_eye[0]
     dy = right_eye[1] - left_eye[1]
@@ -38,4 +36,4 @@ def align_face(frames,faces):
     
 
 # Assuming frames[0] is the image to align
-aligned_face = align_face(frames, faces)
+aligned_face = align_face(frames[0], faces[0])
